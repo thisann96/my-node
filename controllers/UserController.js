@@ -1,108 +1,73 @@
 const User = require('../models/UserModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const {responseSuccess, responseFail} = require('../helpers/responseHelper');
+const appConfig = require('../config/myapp');
+const asyncHandler = require('express-async-handler');
 
-const register = async (req, res) => {
-    try {
-        const {name, email, password, role} = req.body;
-        //Check already exists
-        const isAlready = await User.findOne({
-            $or: [{name}, {email}]
-        });
+const register = asyncHandler(async (req, res) => {
 
-        if (isAlready) {
-            res.status(400).json({
-                success: false,
-                message: 'User or emial is already exists!'
-            });
-        }
+    const {name, email, password, role} = req.body;
 
-        const salt = await bcrypt.genSalt(10);
-        const hashPassword = await bcrypt.hash(password, salt);
+    if (!name || !email) responseFail(res, "User or email is empty!", 400);
 
-        const newUser = await User.create({
-            name,
-            email,
-            password: hashPassword,
-            role
-        });
+    //Check already exists
+    const isAlready = await User.findOne({
+        $or: [{name}, {email}]
+    });
 
-        res.status(201).json({
-            success: true,
-            message: "Register is Successful",
-            data: newUser
-        });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: "Register Failed",
-        });
+    if (isAlready) {
+        responseFail(res, "User or email is already exists!", 400);
     }
-}
 
-const login = async (req, res) => {
-    try {
-        const {email, password} = req.body;
+    const salt = await bcrypt.genSalt(appConfig.hashLength);
+    const hashPassword = await bcrypt.hash(password, salt);
 
-        if (!email || !password) {
-            throw new Error('Validation Error');
-        }
+    const newUser = await User.create({
+        name,
+        email,
+        password: hashPassword,
+        role
+    });
 
-        const user = await User.findOne({email});
+    const userWithoutPassword = newUser.toObject();
+    delete userWithoutPassword.password;
 
-        if (!user) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid credentials'
-            });
-        }
+    responseSuccess(res, userWithoutPassword, 'Register Successful', 201);
 
-        const isPasswordMatch = await bcrypt.compare(password, user.password);
-        if (!isPasswordMatch) {
-            return res.status(400).json({
-                success: false,
-                message: 'Your password is wrong'
-            });
-        }
+});
 
-        const accessToken = await jwt.sign({
-            userId: user._id,
-            userEmail: user.email,
-            role: user.role
-        }, process.env.JWT_SECRET, {expiresIn: 60 * 60}
-        );
+const login = asyncHandler(async (req, res) => {
 
+    const {email, password} = req.body;
 
-        res.status(200).json({
-            success: true,
-            message: 'Login Successful',
-            token: accessToken
-        });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: "Something went wrong",
-        });
-    }
-}
+    if (!email || !password) responseFail(res, "Validation Error", 400);
 
-const me = async (req, res) => {
-    try {
-        const authUser = req.userInfo;
+    const user = await User.findOne({email});
 
-        res.status(200).json({
-            success: true,
-            data: authUser
-        });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: "Something Went wrong",
-        });
-    }
-}
+    if (!user) responseFail(res, "Invalid credentials", 400);
+
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordMatch) responseFail(res, "Your password is wrong", 400);
+
+    const accessToken = await jwt.sign({
+        userId: user._id,
+        userEmail: user.email,
+        role: user.role
+    }, process.env.JWT_SECRET, {expiresIn: 60 * 60}
+    );
+
+    responseSuccess(res, accessToken, 'Login Successful', 200);
+
+});
+
+const me = asyncHandler(async (req, res) => {
+
+    const authUser = req.userInfo;
+
+    responseSuccess(res, authUser, 'Get Me', 200);
+
+});
 
 module.exports = {register, login, me}
