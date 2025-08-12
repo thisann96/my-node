@@ -1,29 +1,24 @@
 const jwt = require('jsonwebtoken');
+const asyncHandler = require('express-async-handler');
+const {responseFail} = require('../helpers/responseHelper');
 
-const auth = async (req, res, next) => {
+const auth = asyncHandler(async (req, res, next) => {
     const headers = req.headers["authorization"];
     const token = headers && headers.split(" ")[1];
-    if (!token) {
-        res.status(401).json({
-            success: false,
-            message: 'Access denied'
-        });
-    }
+
+    if (!token) responseFail(res, "Access denied", 403);
 
     try {
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
         
         req.userInfo = decodedToken;
-
         next();
 
     } catch (error) {
-        console.log(error);
-        res.status(401).json({
-            success: false,
-            message: 'Something went wrong'
-        });
+        responseFail(res, error.message, 400);
     }
-}
+
+
+});
 
 module.exports = auth;
