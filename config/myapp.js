@@ -1,5 +1,9 @@
 const appConfig = () => {
-    const hashLength = 10
+
+    return {
+        hashLength: 10,
+        appVersion: 1
+    }
 }
 
 module.exports = appConfig;
