@@ -2,7 +2,9 @@ const appConfig = () => {
 
     return {
         hashLength: 10,
-        appVersion: 1
+        appVersion: "v1",
+        maxApiCalls:10,
+        maxApiCallsTime: 1 * 60 * 1000
     }
 }
 

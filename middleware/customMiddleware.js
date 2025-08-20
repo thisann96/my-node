@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const requestLogger = (err,req,res,next) =>{
-    console.error(err);
+    
     const date = new Date();
     const timeStamp = date.toISOString().split('T')[0];//YYYY-MM-DD
     const logFile = path.join(__dirname,"../","logs",`${timeStamp}.log`);

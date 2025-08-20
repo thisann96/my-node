@@ -12,7 +12,6 @@ const asyncHandler = fn => (req, res, next) => {
 }
 
 const globalErrorHandler = (err, req, res, next) => {
-    console.error(err.stack);
 
     if (err instanceof APIError) {
         return res.status(err.status).json({
@@ -20,6 +19,11 @@ const globalErrorHandler = (err, req, res, next) => {
             message: err.message
         });
     }
+
+    return res.status(500).json({
+        status: false,
+        message: 'Something went wrong'
+    });
 
 }
 

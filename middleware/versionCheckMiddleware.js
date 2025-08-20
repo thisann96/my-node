@@ -1,5 +1,6 @@
 
 const versionCheck = version => (req, res, next) => {
+
     if (req.path.startsWith(`/api/${version}`)) {
         next()
     } else {

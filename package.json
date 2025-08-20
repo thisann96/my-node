@@ -19,6 +19,7 @@
     "env": "^0.0.2",
     "express": "^5.1.0",
     "express-async-handler": "^1.2.0",
+    "express-rate-limit": "^8.0.1",
     "graphql": "^16.11.0",
     "graphql-tag": "^2.12.6",
     "jsonwebtoken": "^9.0.2",
