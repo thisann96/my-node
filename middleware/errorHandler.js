@@ -7,8 +7,8 @@ class APIError extends Error {
     }
 }
 
-const asyncHandler = fn => (req, res, next) => {
-    Promise.resolve(fu => (req, res, next)).catch(next);
+const asyncHandler = (fn) => (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
 }
 
 const globalErrorHandler = (err, req, res, next) => {
@@ -22,7 +22,7 @@ const globalErrorHandler = (err, req, res, next) => {
 
     return res.status(500).json({
         status: false,
-        message: 'Something went wrong'
+        message: 'Something went wrong ' + err.message
     });
 
 }

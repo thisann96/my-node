@@ -9,8 +9,7 @@ const {configureCors} = require("./config/corsConfig");
 const {requestLogger, addTimestamp} = require("./middleware/customMiddleware");
 const {globalErrorHandler} = require("./middleware/errorHandler");
 const versionCheck = require("./middleware/versionCheckMiddleware");
-const {limiter} = require("./middleware/rateLimit");
-
+const {limiter, ipBlock} = require("./middleware/rateLimit");
 
 const app = express();
 const PORT = process.env.PORT || 3010
@@ -23,13 +22,18 @@ app.use(addTimestamp);
 
 app.use(configureCors());
 
+app.get('/', ipBlock(maxApiCalls), async (req, res) => {
+    res.send({
+        status: true,
+        message: `Welcome to ${appConfig().appName} API`,
+        version: appVersion
+    });
+});
+
 app.use(limiter(maxApiCalls, maxApiCallsTime));
 app.use(express.json());
-app.use(versionCheck(appVersion));
 
-app.get('/', (req, res) => {
-    res.send('Welcome Node');
-});
+app.use(versionCheck(appVersion));
 
 app.use(`/api/${appVersion}/auth`, UserRoute);
 app.use(`/api/${appVersion}`, UserRoute);
